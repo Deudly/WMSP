@@ -1,10 +1,11 @@
 var Utility = require('./Utility/Utility');
 var CreateFunction = Utility.CreateFunction;
-const mainServerIp = "62.4.16.132";
+const mainServerIp = "localhost";
 const mainServerPort = "7778";
 var port = 20000;
-var WebSocketServer = require('ws');
-var ws = new WebSocketServer("ws://" + mainServerIp + ":" + mainServerPort + "/");
+
+var WebSocket = require('ws');
+var ws = new WebSocket("ws://" + mainServerIp + ":" + mainServerPort + "/");
 ws.onmessage = CreateFunction(this, function (evt) {
     var received_msg = evt.data;
     console.log("Got message: " + received_msg);
@@ -15,11 +16,15 @@ ws.onmessage = CreateFunction(this, function (evt) {
             startGameServer(message['gameJSON'])
         } break;
         case "CouldYouStart": {
-            ws.send({ message: "SureICan" })
+            console.log("sure i can")
+            send({ message: "SureICan" })
         } break;
     }
 })
 
+function send(object) {
+    ws.send(JSON.stringify(object));
+};
 
 
 function startGameServer(gameJSON) {
@@ -39,7 +44,7 @@ function startGameServer(gameJSON) {
 
     });
     game.on('close', (code) => {
-        messageCallback(`child process exited with code ${code}`);
+        //messageCallback(`child process exited with code ${code}`);
         console.log(`child process exited with code ${code}`);
     });
 }
