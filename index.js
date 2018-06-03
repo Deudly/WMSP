@@ -1,3 +1,6 @@
+// Write here the IP of the server that is running this
+const myIP = "212.47.249.252";
+
 var Utility = require('./Utility/Utility');
 var CreateFunction = Utility.CreateFunction;
 const mainServerIp = "localhost";
@@ -13,11 +16,10 @@ ws.onmessage = CreateFunction(this, function (evt) {
     var messageTitle = message['message'];
     switch (messageTitle) {
         case "StartGame": {  //{message: "StartGame", text: String};
-            startGameServer(message['gameJSON'])
+            startGameServer(message['gameJSON'], message['lobbyID'])
         } break;
         case "CouldYouStart": {
-            console.log("sure i can")
-            send({ message: "SureICan" })
+            send({ message: "SureICan", lobbyID: message['lobbyID'] })
         } break;
     }
 })
@@ -27,7 +29,7 @@ function send(object) {
 };
 
 
-function startGameServer(gameJSON) {
+function startGameServer(gameJSON, lobbyID) {
     const exec = require('child_process');
     const game = exec.exec('mono /LoM/GameServer/GameServerApp.exe --port ' + port + ' --config-json ' + gameJSON,
         { cwd: '/LoM/GameServer', maxBuffer: 1024 * 90000 });
@@ -38,7 +40,7 @@ function startGameServer(gameJSON) {
             //if (data.indexOf("Game is ready.") !== -1) {
             console.log("Game is ready, doing callback");
             waitingForBoot = false;
-            ws.send({ message: "PortToUse", port });
+            send({ message: "PortToUse", port, lobbyID, myIP });
             port++;
         }
 
