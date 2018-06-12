@@ -12,29 +12,38 @@ const mainServerIp = "62.4.16.132";
 const mainServerPort = "7778";
 var port = 20000;
 
-var ws = new WebSocket("ws://" + mainServerIp + ":" + mainServerPort + "/");
-console.log("WMSP started and connected to main server")
+console.log("WMSP started!");
 
-/*ws.onconnect = CreateFunction(this, function(evt){
-    console.log("sending key")
-    send({ message: "Key", key: key })
-})*/
-
-ws.onmessage = CreateFunction(this, function (evt) {
-    var received_msg = evt.data;
-    console.log("Got message: " + received_msg);
-    send({ message: "Key", key: key })
-    var message = JSON.parse(received_msg);
-    var messageTitle = message['message'];
-    switch (messageTitle) {
-        case "StartGame": {  //{message: "StartGame", text: String};
-            startGameServer(message['gameJSON'], message['lobbyID'])
-        } break;
-        case "CouldYouStart": {
-            send({ message: "SureICan", lobbyID: message['lobbyID'] })
-        } break;
-    }
-})
+var ws;
+var connect = function() {
+    ws = new WebSocket("ws://" + mainServerIp + ":" + mainServerPort + "/");
+    ws.onopen = CreateFunction(this, function(evt) {
+        console.log("WMSP connected to main server")
+    });
+    ws.onclose = CreateFunction(this, function(evt) {
+        console.log("Connection closed. Trying to reconnect in 30 seconds...");
+        setTimeout(connect, 30000);
+    });
+    ws.onerror = CreateFunction(this, function(evt) {
+        console.log("Connection error");
+    });
+    ws.onmessage = CreateFunction(this, function (evt) {
+        var received_msg = evt.data;
+        console.log("Got message: " + received_msg);
+        send({ message: "Key", key: key });
+        var message = JSON.parse(received_msg);
+        var messageTitle = message['message'];
+        switch (messageTitle) {
+            case "StartGame": {  //{message: "StartGame", text: String};
+                startGameServer(message['gameJSON'], message['lobbyID'])
+            } break;
+            case "CouldYouStart": {
+                send({ message: "SureICan", lobbyID: message['lobbyID'] })
+            } break;
+        }
+    })
+}
+connect();
 
 function send(object) {
     ws.send(JSON.stringify(object));
